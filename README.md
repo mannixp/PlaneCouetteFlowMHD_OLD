@@ -15,12 +15,13 @@ Figure 1. time-series of (Mannix et al. 2021/2) can be reproduced by specifying
 
 along with the parameters specified therin, and running the script and plotting the data as above. 
 
-Typically this will require a compute cluster or large workstation, for reference we find that using 32 cores on
+Typically this execution demands a compute cluster or large workstation. Referencence run-times using 32 cores are
 
-`
+```
 Dual Intel Xeon Gold 6248 @ 2.5GHz – 20 cores processors - ??? cpu-hr
 2 AMD Epyc 7302 @ 3 GHz – 16 cores processors            - ??? cpu-hr
-`
+```
+
 Figure 1. snapshots of (Mannix et al. 2021/2) can be reproduced in Paraview. To prepare the data for Paraview: add the pyevtk to your conda environment
 
 `conda install -c conda-forge pyevtk `
