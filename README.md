@@ -1,5 +1,5 @@
 # PlaneCouetteFlowMHD
-DNS script, initial condition and instructions required to simulate and reproduce the quasi-Keplarian plane Couette flow dynamo (Mannix et al. 2021/2). The script is written for the [Dedalus code (Burns et al. 2020)](https://doi.org/10.1103/PhysRevResearch.2.023068), which must be installed see [Dedalus](https://dedalus-project.org)
+DNS script, initial condition and instructions required to simulate and reproduce the quasi-Keplarian plane Couette flow dynamo (Mannix et al. 2021/2). The script is written for execution with the [Dedalus code (Burns et al. 2020)](https://doi.org/10.1103/PhysRevResearch.2.023068), for installation details see [Dedalus](https://dedalus-project.org)
 
 Having installed Dedalus and activated its conda environment, execute the script by running
 
@@ -9,7 +9,7 @@ where procs is to be replaced with the desired/availabe number. The time-series 
 
 `python3 Plot_Paper_Data.py`
 
-Figure 1. time-series of (Mannix et al. 2021/2) can be reproduced by specifying 
+Figure 1. time-series of (Mannix et al. 2021/2) can be reproduced by specifying, *a minimum resolution* of 
 
 `Nx=64,Ny=128,Ny=64, dt=0.0125, N_ITERS = 10*((Pm*Re)/dt)`
 
