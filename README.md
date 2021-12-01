@@ -3,11 +3,11 @@ DNS script, initial condition and instructions required to simulate and reproduc
 
 Having installed Dedalus and activated its conda environment, execute the script by running
 
-`mpiexec -np procs python3 FWD_Solve_PCF_MHD.py`
+`mpiexec -np procs python3 QKEP_PCF_3D_MHD.py`
 
 where procs is to be replaced with the desired/availabe number. The time-series and snapshots produced by the simulation, can be viewed by executing
 
-`python3 Plot_Paper_Data.py`
+`python3 Plot_Paper_figures.py`
 
 Figure 1. time-series of (Mannix et al. 2021/2) can be reproduced by specifying, *a minimum resolution* of 
 
