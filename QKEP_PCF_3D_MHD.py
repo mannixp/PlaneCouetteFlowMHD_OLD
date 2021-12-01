@@ -1,5 +1,7 @@
 """
-Dedalus script for 3D Rayleigh-Benard convection.
+Dedalus script for 3D Quasi-Keplarian MHD Plane Couette flow 
+
+(Yet to be commented....)
 
 This script uses parity-bases in the x and y directions to mimick stress-free,
 insulating sidewalls.  The equations are scaled in units of the thermal
