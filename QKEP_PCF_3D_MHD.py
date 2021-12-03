@@ -30,15 +30,14 @@ The simulation should take roughly ?????? cpu-hrs to run, but will
 automatically stop after an hour, to change this setting .......?
 
 """
-import sys,os,mpi4py
-# Prevent multi-threading
+import sys,os,mpi4py,time
+
+# Prevent multi-threading upon initialising mpi4py
 os.environ["OMP_NUM_THREADS"] = "1";
 mpi4py.rc.thread_level = 'single';
 
 import numpy as np
 from mpi4py import MPI
-import time
-
 from dedalus import public as de
 from dedalus.extras import flow_tools
 
@@ -58,8 +57,7 @@ mu = 4./3.; # mu = -2*Omega*d/U, where Omega is the rotation rate
 Pm = 75.0;  # Pm = \nu/\eta,	 where \eta is the Ohmic diffusivity
 Rm = Re*Pm;
 
-dt = 0.0125; 
-Nx,Ny,Nz = 64,128,64
+#Nx,Ny,Nz = 64,128,64; dt = 0.0125; 
 MESH_SIZE = None; # Process mesh, for example use [16,16] for 256 cores with Nx,Ny,Nz =256,256,64
 
 T_opt = 6.;
@@ -114,6 +112,8 @@ PCF.substitutions['INDz(A1,A2,A3,B1,B2,B3)'] = "dx( EMF_y(A1,A3,B1,B3) ) - dy( E
 # add equations
 #######################################################
 logger.info("--> Adding Equations");
+
+# Navier-Stokes
 PCF.add_equation("dx(u) + dy(v) + wz = 0");
 PCF.add_equation("uz - dz(u) = 0"); 
 PCF.add_equation("vz - dz(v) = 0");
@@ -122,7 +122,7 @@ PCF.add_equation("dt(u) - (1./Re)*Lap(u,uz) + dx(p) - Re_rot*w + 1.*w           
 PCF.add_equation("dt(v) - (1./Re)*Lap(v,vz) + dy(p)                    + 1.*z*W_z(u,v) = F_y(u,v,w) - F_y(A,B,C)");
 PCF.add_equation("dt(w) - (1./Re)*Lap(w,wz) + dz(p) + Re_rot*u - 1.*u  - 1.*z*W_y(u,w) = F_z(u,v,w) - F_z(A,B,C)");
 
-# C) Induction Equation
+# Induction Equation
 PCF.add_equation("dx(A) + dy(B) + Cz =0");
 PCF.add_equation("Az - dz(A) = 0"); 
 PCF.add_equation("Bz - dz(B) = 0");
@@ -130,6 +130,8 @@ PCF.add_equation("Cz - dz(C) = 0");
 PCF.add_equation("dt(A) - (1./Rm)*Lap(A,Az) + dx(Pi) - 1.*z*dy(B) - 1.*C - 1.*z*Cz = INDx(u,v,w,A,B,C)");
 PCF.add_equation("dt(B) - (1./Rm)*Lap(B,Bz) + dy(Pi) + 1.*z*dx(B)                  = INDy(u,v,w,A,B,C)");
 PCF.add_equation("dt(C) - (1./Rm)*Lap(C,Cz) + dz(Pi) + 1.*z*dx(C)                  = INDz(u,v,w,A,B,C)");
+
+# u = 0 - No-slip 
 
 # @ z = -1
 PCF.add_bc("left(u) = 0")
@@ -140,29 +142,29 @@ PCF.add_bc("left(w) = 0");
 PCF.add_bc("right(u) = 0");
 PCF.add_bc("right(v) = 0")
 PCF.add_bc("right(w) = 0",     condition="(nx != 0) or  (ny != 0)");
-PCF.add_bc("integ(p,'z') = 0", condition="(nx == 0) and (ny == 0)"); # Potentially unecessary
+PCF.add_bc("integ(p,'z') = 0", condition="(nx == 0) and (ny == 0)");
 
-# n x J = 0, n.B = 0  - Perfectly Conducting
+# n x J = n.B = 0  - Perfectly Conducting
+
+# @ z = -1
 PCF.add_bc("left(Az) = 0");
 PCF.add_bc("left(Bz) = 0");
 PCF.add_bc("left(C)  = 0");
 
-PCF.add_bc("right(Az) = 0",    condition="(nx != 0) or  (ny != 0)");
+# @ z = 1
+PCF.add_bc("right(Az)    = 0",  condition="(nx != 0) or  (ny != 0)");
 PCF.add_bc("integ(A,'z') = 0",  condition="(nx == 0) and (ny == 0)");
-
-PCF.add_bc("right(Bz) = 0",  condition="(nx != 0) or  (ny != 0)");
+PCF.add_bc("right(Bz)    = 0",  condition="(nx != 0) or  (ny != 0)");
 PCF.add_bc("integ(B,'z') = 0",  condition="(nx == 0) and (ny == 0)");
-
-PCF.add_bc("right(C)  = 0",     condition="(nx != 0) or  (ny != 0)");
-PCF.add_bc("integ(Pi,'z') = 0", condition="(nx == 0) and (ny == 0)"); # Potentially unecessary
+PCF.add_bc("right(C)      = 0", condition="(nx != 0) or  (ny != 0)");
+PCF.add_bc("integ(Pi,'z') = 0", condition="(nx == 0) and (ny == 0)");
 
 # Build solver
 IVP_FWD = PCF.build_solver(de.timesteppers.MCNAB2)
 logger.info('Solver built')
 
-# Initial conditions
-IVP_FWD.load_state("InitCond_Re20Pm75_T0.125Rm_M5e-05_MinSeed.h5",index=0); # Initial condition t=0 is index=0, index=1 is t=T_opt = Rm/8 
-print("IVP_FWD.sim_time =",IVP_FWD.sim_time);
+# Initial condition t=0 is index=0, index=1 is t=T_opt = Rm/8 
+IVP_FWD.load_state("InitCond_Re20Pm75_T0.125Rm_M5e-05_MinSeed.h5",index=0);
 IVP_FWD.sim_tim = IVP_FWD.initial_sim_time = 0.
 IVP_FWD.iteration = IVP_FWD.initial_iteration = 0    
 
@@ -177,12 +179,11 @@ CFL.add_velocities(('u', 'v', 'w'))
 
 # analysis tasks
 analysis_CPT = IVP_FWD.evaluator.add_file_handler('CheckPoints', iter=N_SUB_ITERS, mode='overwrite');
-analysis_CPT.add_system(IVP_FWD.state, layout='g', scales=3/2); # Dealised scale for improved plotting!!
+analysis_CPT.add_system(IVP_FWD.state, layout='g', scales=3/2);
+analysis_CPT.add_task("inv_Vol*integ( (z + u)**2 + v*v + w*w, 'z')", name='KE per k',layout='c');
+analysis_CPT.add_task("inv_Vol*integ(  A*A       + B*B + C*C, 'z')", name='BE per k',layout='c');
 
-##analysis_CPT.add_task("inv_Vol*integ( (z + u)**2 + v*v + w*w, 'z')", name='KE per k',layout='c');
-##analysis_CPT.add_task("inv_Vol*integ( A*A        + B*B + C*C, 'z')", name='BE per k',layout='c');
-
-# B.2) Save- scalar data
+# B.2) Save-scalar data
 analysis1 = IVP_FWD.evaluator.add_file_handler("scalar_data", iter=100, mode='overwrite'); # This will save all the scalar data, for every run
 
 analysis1.add_task("inv_Vol*integ( (z + u)**2 )", name="u_x total kinetic energy"); # Add the base state V(z) to ensure <U,U> is calculated
@@ -190,8 +191,8 @@ analysis1.add_task("inv_Vol*integ( u*u )", name="u kinetic energy")
 analysis1.add_task("inv_Vol*integ( v*v )", name="v kinetic energy")
 analysis1.add_task("inv_Vol*integ( w*w )", name="w kinetic energy") 
 
-analysis1.add_task("inv_Vol*integ( A*A          )", name="B_x   magnetic energy")
 analysis1.add_task("inv_Vol*integ( Avg_Bx(A)**2 )", name="B_xM0 magnetic energy"); # Useful reduction to isolate the Omega-effect
+analysis1.add_task("inv_Vol*integ( A*A )", name="B_x   magnetic energy")
 analysis1.add_task("inv_Vol*integ( B*B )", name="B_y magnetic energy")
 analysis1.add_task("inv_Vol*integ( C*C )", name="B_z magnetic energy")
 
@@ -222,6 +223,6 @@ finally:
     logger.info('Run time: %.2f sec' %(end_run_time-start_run_time))
     logger.info('Run time: %f cpu-hr' %((end_run_time-start_run_time)/60/60*domain.dist.comm_cart.size))
 
-from dedalus.tools  import post
+from dedalus.tools import post
 post.merge_process_files("CheckPoints", cleanup=True, comm=MPI.COMM_WORLD);
 post.merge_process_files("scalar_data", cleanup=True, comm=MPI.COMM_WORLD);
