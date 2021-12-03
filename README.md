@@ -7,11 +7,11 @@ Having installed Dedalus and activated its conda environment, execute the script
 
 where procs is to be replaced with the desired/availabe number. The time-series and snapshots produced by the simulation, can be viewed by executing
 
-`python3 Plot_Paper_figures.py`
+`python3 Plot_Paper_figures.py && mkdir Plotted_Data && mv *.pdf Plotted_Data`
 
 Figure 1. time-series can be reproduced by specifying, *a minimum resolution* of 
 
-`Nx=64,Ny=128,Ny=64, dt=0.0125, N_ITERS = 10*((Pm*Re)/dt)`
+`Nx=64,Ny=128,Ny=64, dt=0.0125, N_ITERS = 6*((Pm*Re)/dt)`
 
 along with the parameters specified therin, and running the script and plotting the data as above. 
 
