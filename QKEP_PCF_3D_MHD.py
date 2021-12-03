@@ -1,31 +1,38 @@
 """
-Dedalus script for 3D Quasi-Keplarian MHD Plane Couette flow 
+Dedalus script for 3D Quasi-Keplarian MHD Plane Couette flow dynamo (P. M. Mannix, Y. Ponty, F. Marcotte 2021/2)
 
-(Yet to be commented....)
+(Yet to be fully commented....)
 
-This script uses parity-bases in the x and y directions to mimick stress-free,
-insulating sidewalls.  The equations are scaled in units of the thermal
-diffusion time (Pe = 1).
+This script uses a Fourier basis in the (stream-wise) x and (span-wise) y directions,
+and Chebshev basis in the (shear-wise) z direction. No-slip velocity U = \pm 1 is
+enforced by decomposing \vec{U}(x,y,z,t) = V(z)\vec{x} + \vec{u}(x,y,z,t).
+Perfectly conducting magnetic boundary conditions B_z = dz(B_x) = dz(B_y) = 0, are
+enforced alongside the div(B) = 0 condition using a Lagrange mutiplier \Pi. For
+details of this approach see (A. Guseva et al. 2015 New J. Phys. 17)
 
-This script should be ran in parallel, and would be most efficient using a
-2D process mesh.  It uses the built-in analysis framework to save 2D data slices
-in HDF5 files.  The `merge_procs` command can be used to merge distributed analysis
-sets from parallel runs, and the `plot_slices.py` script can be used to plot
-the slices.
+The equations are scaled using the: 
+half channel width L = d L^*
+shear time-scale   t = (d/U)t^*
+where ^* denotes non-dimensional length/time respectively.
 
-To run, merge, and plot using 4 processes, for instance, you could use:
-    $ mpiexec -n 4 python3 rayleigh_benard.py
-    $ mpiexec -n 4 python3 -m dedalus merge_procs snapshots
-    $ mpiexec -n 4 python3 plot_slices.py snapshots/*.h5
+This script should be ran in parallel using a compute cluster, and would be most efficient 
+using a 2D process mesh.  It uses the built-in analysis framework to save 3D snapshots
+and diagnostics such as volume integrated magnetic <B,B> and kinetic energy <U,U>
+in HDF5 files.  These are merged at the end of the script, alternatively `merge_procs` 
+command can be used to merge distributed analysis sets from parallel runs, and 
+the `QKEP_PCF_3D_MHD.py` script can be used to plot the time-series and some 2D slices.
 
-The simulation should take roughly 400 process-minutes to run, but will
-automatically stop after an hour.
+To run, and plot using 4 processes, for instance, you could use:
+    $ mpiexec -n 4 python3 QKEP_PCF_3D_MHD.py
+    $ mpiexec -n 4 python3 Plot_Paper_figures.py
+
+The simulation should take roughly ?????? cpu-hrs to run, but will
+automatically stop after an hour, to change this setting .......?
 
 """
-import sys,os;
-os.environ["OMP_NUM_THREADS"] = "1" # Improves performance apparently ????
-
-import mpi4py
+import sys,os,mpi4py
+# Prevent multi-threading
+os.environ["OMP_NUM_THREADS"] = "1";
 mpi4py.rc.thread_level = 'single';
 
 import numpy as np
@@ -46,24 +53,18 @@ logger = logging.getLogger(__name__)
 # Parameters
 alpha = 0.375; beta = 1.0; 
 Lx, Ly, Lz = ( (2.*np.pi)/alpha, (2.*np.pi)/beta, 2. )
-Re = 20.;   # Re = |S|d^2/\nu
-mu = 4./3.; # = -2*Omega/S where S is the shear rate
-Rm = Re*75.0;
+Re = 20.;   # Re = |U|d/\nu,     where /nu is the kinematic viscoity
+mu = 4./3.; # mu = -2*Omega*d/U, where Omega is the rotation rate
+Pm = 75.0;  # Pm = \nu/\eta,	 where \eta is the Ohmic diffusivity
+Rm = Re*Pm;
 
-dt = 0.004;
-Nx,Ny,Nz = 192,256,96;
-#Nx,Ny,Nz = 64,128,64
-#Nx,Ny,Nz = 32,32,32;
+dt = 0.0125; 
+Nx,Ny,Nz = 64,128,64
+MESH_SIZE = None; # Process mesh, for example use [16,16] for 256 cores with Nx,Ny,Nz =256,256,64
 
-T_opt = 2.;
+T_opt = 6.;
 N_ITERS = int(T_opt*(Rm/dt));
 N_SUB_ITERS = N_ITERS//50;
-
-MESH_SIZE = None; #[12,16];
-HOME_DIR = "/workspace/pmannix/DAL_PCF_KEP_MHD/";
-#STR = "Test1_Different_NoiseOnly_T8_M5e-05/Results_DAL_Re20Pm75_T8_M5e-05_J1_V1Noise/CheckPoints_iter_9.h5"
-STR = "TestJ1_DAL_M5e-05_T8_Re20Pm75_Nx192Ny256Nz96_V1Noise_2Ohmic/CheckPoints/CheckPoints_s1.h5"; 
-filename = HOME_DIR + STR;# + "/CheckPoints/CheckPoints_s1.h5";
 
 # Create bases and domain
 start_init_time = time.time()
@@ -72,7 +73,10 @@ y_basis = de.Fourier('y', Ny, interval=(0, Ly), dealias=3/2)
 z_basis = de.Chebyshev('z', Nz, interval=(-Lz/2, Lz/2), dealias=3/2)
 domain = de.Domain([x_basis, y_basis, z_basis], grid_dtype=np.float64,mesh=MESH_SIZE)
 
-# \vec{v}  = u x^ + v y^ + w z^; # \vec{B}  = A x^ + B y^ + C z^
+# Velocity field vector \vec{u}  = u x^ + v y^ + w z^; 
+# Magnetic field vector \vec{B}  = A x^ + B y^ + C z^;
+# where x^,y^,z^ denote unit vectors.
+
 PCF = de.IVP(domain, variables=['p',  'u', 'v', 'w',   'uz', 'vz', 'wz',    'Pi', 'A', 'B', 'C',  'Az', 'Bz', 'Cz'], time='t');
 PCF.meta[:]['z']['dirichlet'] = True;
 
@@ -157,7 +161,7 @@ IVP_FWD = PCF.build_solver(de.timesteppers.MCNAB2)
 logger.info('Solver built')
 
 # Initial conditions
-IVP_FWD.load_state(filename,index=-1); # Index is used to access a different write time!s
+IVP_FWD.load_state("InitCond_Re20Pm75_T0.125Rm_M5e-05_MinSeed.h5",index=0); # Initial condition t=0 is index=0, index=1 is t=T_opt = Rm/8 
 print("IVP_FWD.sim_time =",IVP_FWD.sim_time);
 IVP_FWD.sim_tim = IVP_FWD.initial_sim_time = 0.
 IVP_FWD.iteration = IVP_FWD.initial_iteration = 0    
@@ -175,19 +179,19 @@ CFL.add_velocities(('u', 'v', 'w'))
 analysis_CPT = IVP_FWD.evaluator.add_file_handler('CheckPoints', iter=N_SUB_ITERS, mode='overwrite');
 analysis_CPT.add_system(IVP_FWD.state, layout='g', scales=3/2); # Dealised scale for improved plotting!!
 
-analysis_CPT.add_task("inv_Vol*integ( (z + u)**2 + v*v + w*w, 'z')", name='KE per k',layout='c');
-analysis_CPT.add_task("inv_Vol*integ( A*A        + B*B + C*C, 'z')", name='BE per k',layout='c');
+##analysis_CPT.add_task("inv_Vol*integ( (z + u)**2 + v*v + w*w, 'z')", name='KE per k',layout='c');
+##analysis_CPT.add_task("inv_Vol*integ( A*A        + B*B + C*C, 'z')", name='BE per k',layout='c');
 
 # B.2) Save- scalar data
 analysis1 = IVP_FWD.evaluator.add_file_handler("scalar_data", iter=100, mode='overwrite'); # This will save all the scalar data, for every run
 
-analysis1.add_task("inv_Vol*integ( (z + u)**2 )", name="u_x total kinetic energy")
+analysis1.add_task("inv_Vol*integ( (z + u)**2 )", name="u_x total kinetic energy"); # Add the base state V(z) to ensure <U,U> is calculated
 analysis1.add_task("inv_Vol*integ( u*u )", name="u kinetic energy")
 analysis1.add_task("inv_Vol*integ( v*v )", name="v kinetic energy")
 analysis1.add_task("inv_Vol*integ( w*w )", name="w kinetic energy") 
 
 analysis1.add_task("inv_Vol*integ( A*A          )", name="B_x   magnetic energy")
-analysis1.add_task("inv_Vol*integ( Avg_Bx(A)**2 )", name="B_xM0 magnetic energy")
+analysis1.add_task("inv_Vol*integ( Avg_Bx(A)**2 )", name="B_xM0 magnetic energy"); # Useful reduction to isolate the Omega-effect
 analysis1.add_task("inv_Vol*integ( B*B )", name="B_y magnetic energy")
 analysis1.add_task("inv_Vol*integ( C*C )", name="B_z magnetic energy")
 
