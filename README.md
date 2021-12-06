@@ -3,7 +3,7 @@ DNS script, initial condition and instructions required to simulate and reproduc
 
 Having installed Dedalus and activated its conda environment, unzip the initial condition and execute the script by running
 
-`mpiexec -np procs python3 QKEP_PCF_3D_MHD.py`
+`unzip InitCond_Re20Pm75_T0.125Rm_M5e-05_MinSeed.h5.zip && mpiexec -np procs python3 QKEP_PCF_3D_MHD.py`
 
 where procs is to be replaced with the desired/availabe number. The time-series and snapshots produced by the simulation, can be viewed by executing
 
