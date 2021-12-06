@@ -19,7 +19,7 @@ Typically this execution demands a compute cluster or large workstation. Referen
 
 ```
 Dual Intel Xeon Gold 6248 @ 2.5GHz – 20 cores processors - ??? cpu-hr
-2 AMD Epyc 7302 @ 3 GHz – 16 cores processors            - ??? cpu-hr
+2 AMD Epyc 7302 @ 3 GHz – 2*16 cores processors          - 180 cpu-hr
 ```
 
 Figure 1. snapshots can be reproduced in Paraview. To prepare the data for Paraview: add the pyevtk to your conda environment
