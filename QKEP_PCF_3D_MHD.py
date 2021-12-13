@@ -8,7 +8,9 @@ and Chebshev basis in the (shear-wise) z direction. No-slip velocity U = \pm 1 i
 enforced by decomposing \vec{U}(x,y,z,t) = V(z)\vec{x} + \vec{u}(x,y,z,t).
 Perfectly conducting magnetic boundary conditions B_z = dz(B_x) = dz(B_y) = 0, are
 enforced alongside the div(B) = 0 condition using a Lagrange mutiplier \Pi. For
-details of this approach see (A. Guseva et al. 2015 New J. Phys. 17)
+details of this approach see (A. Guseva et al. 2015 New J. Phys. 17). Time-stepping 
+should be performed with L-stable Runge-Kutta integrators, so as to treat high wavenumbers
+and purely imaginary spectrum correctly see (Ascher, Uri M. et al. 1997, App. Num. Math.).
 
 The equations are scaled using the: 
 half channel width L = d L^*
@@ -26,8 +28,7 @@ To run, and plot using 4 processes, for instance, you could use:
     $ mpiexec -n 4 python3 QKEP_PCF_3D_MHD.py
     $ mpiexec -n 4 python3 Plot_Paper_figures.py
 
-The simulation should take roughly ?????? cpu-hrs to run, but will
-automatically stop after an hour, to change this setting .......?
+The simulation should take roughly ?????? cpu-hrs to run.
 
 """
 import sys,os,mpi4py,time
@@ -57,7 +58,7 @@ mu = 4./3.; # mu = -2*Omega*d/U, where Omega is the rotation rate
 Pm = 75.0;  # Pm = \nu/\eta,	 where \eta is the Ohmic diffusivity
 Rm = Re*Pm;
 
-#Nx,Ny,Nz = 64,128,64; dt = 0.0125; 
+Nx,Ny,Nz = 64,128,64; dt = 0.0125; 
 MESH_SIZE = None; # Process mesh, for example use [16,16] for 256 cores with Nx,Ny,Nz =256,256,64
 
 T_opt = 6.;
@@ -160,7 +161,7 @@ PCF.add_bc("right(C)      = 0", condition="(nx != 0) or  (ny != 0)");
 PCF.add_bc("integ(Pi,'z') = 0", condition="(nx == 0) and (ny == 0)");
 
 # Build solver
-IVP_FWD = PCF.build_solver(de.timesteppers.MCNAB2)
+IVP_FWD = PCF.build_solver(de.timesteppers.RK222);
 logger.info('Solver built')
 
 # Initial condition t=0 is index=0, index=1 is t=T_opt = Rm/8 
@@ -174,8 +175,9 @@ IVP_FWD.stop_wall_time = np.inf; #60 * 60.
 IVP_FWD.stop_iteration = N_ITERS; N_PRINT = N_SUB_ITERS//100;
 
 # CFL
-CFL=flow_tools.CFL(IVP_FWD,initial_dt=dt,cadence=5,safety=0.5,max_change=1.25, min_change=0.25,max_dt=1.*dt)
-CFL.add_velocities(('u', 'v', 'w'))
+CFL=flow_tools.CFL(IVP_FWD,initial_dt=dt,cadence=5,safety=0.5,max_change=1.125, min_change=0.125,max_dt=1.*dt)
+CFL.add_velocities(('u', 'v', 'w'));
+CFL.add_velocities(('A', 'B', 'C'));
 
 # analysis tasks
 analysis_CPT = IVP_FWD.evaluator.add_file_handler('CheckPoints', iter=N_SUB_ITERS, mode='overwrite');
