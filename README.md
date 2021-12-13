@@ -15,10 +15,9 @@ Figure 1. time-series can be reproduced by specifying, *a minimum resolution* of
 
 along with the parameters specified therin, and running the script and plotting the data as above. 
 
-Typically this execution demands a compute cluster or large workstation. Referencence run-times using 32 cores are
+Typically this execution demands a compute cluster or large workstation. Referencence run-time using 32 cores is
 
 ```
-Dual Intel Xeon Gold 6248 @ 2.5GHz – 20 cores processors - ??? cpu-hr
 2 AMD Epyc 7302 @ 3 GHz – 2*16 cores processors          - 180 cpu-hr
 ```
 
