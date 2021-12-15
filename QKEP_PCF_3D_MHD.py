@@ -53,7 +53,7 @@ logger = logging.getLogger(__name__)
 # Parameters
 alpha = 0.375; beta = 1.0; 
 Lx, Ly, Lz = ( (2.*np.pi)/alpha, (2.*np.pi)/beta, 2. )
-Re = 20.;   # Re = |U|d/\nu,     where /nu is the kinematic viscoity
+Re = 25.;   # Re = |U|d/\nu,     where /nu is the kinematic viscoity
 mu = 4./3.; # mu = -2*Omega*d/U, where Omega is the rotation rate
 Pm = 75.0;  # Pm = \nu/\eta,	 where \eta is the Ohmic diffusivity
 Rm = Re*Pm;
@@ -194,7 +194,7 @@ analysis1.add_task("inv_Vol*integ( v*v )", name="v kinetic energy")
 analysis1.add_task("inv_Vol*integ( w*w )", name="w kinetic energy") 
 
 analysis1.add_task("inv_Vol*integ( Avg_Bx(A)**2 )", name="B_xM0 magnetic energy"); # Useful reduction to isolate the Omega-effect
-analysis1.add_task("inv_Vol*integ( A*A )", name="B_x   magnetic energy")
+analysis1.add_task("inv_Vol*integ( A*A )", name="B_x magnetic energy")
 analysis1.add_task("inv_Vol*integ( B*B )", name="B_y magnetic energy")
 analysis1.add_task("inv_Vol*integ( C*C )", name="B_z magnetic energy")
 
