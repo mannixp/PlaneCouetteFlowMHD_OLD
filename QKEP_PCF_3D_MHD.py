@@ -1,10 +1,9 @@
 """
 Dedalus script for 3D Quasi-Keplarian MHD Plane Couette flow dynamo (P. M. Mannix, Y. Ponty, F. Marcotte 2021/2)
 
-(Yet to be fully commented....)
 
 This script uses a Fourier basis in the (stream-wise) x and (span-wise) y directions,
-and Chebshev basis in the (shear-wise) z direction. No-slip velocity U = \pm 1 is
+and Chebyshev basis in the (shear-wise) z direction. No-slip velocity U = \pm 1 is
 enforced by decomposing \vec{U}(x,y,z,t) = V(z)\vec{x} + \vec{u}(x,y,z,t).
 Perfectly conducting magnetic boundary conditions B_z = dz(B_x) = dz(B_y) = 0, are
 enforced alongside the div(B) = 0 condition using a Lagrange mutiplier \Pi. For
@@ -17,6 +16,7 @@ half channel width L = d L^*
 shear time-scale   t = (d/U)t^*
 where ^* denotes non-dimensional length/time respectively.
 
+(The following paragraph is copied from Dedalus/examples/ivp codes.)
 This script should be ran in parallel using a compute cluster, and would be most efficient 
 using a 2D process mesh.  It uses the built-in analysis framework to save 3D snapshots
 and diagnostics such as volume integrated magnetic <B,B> and kinetic energy <U,U>
@@ -28,7 +28,10 @@ To run, and plot using 4 processes, for instance, you could use:
     $ mpiexec -n 4 python3 QKEP_PCF_3D_MHD.py
     $ mpiexec -n 4 python3 Plot_Paper_figures.py
 
-The simulation should take roughly ?????? cpu-hrs to run.
+2 Ohmic times on 32 Cores with a 1D mesh the simulation should take roughly
+
+-180 cpu-hrs for a multistep MCNAB2 integration
+-580 cpu-hrs for a RK222 integration
 
 """
 import sys,os,mpi4py,time
@@ -61,7 +64,7 @@ Rm = Re*Pm;
 Nx,Ny,Nz = 64,128,64; dt = 0.0125; 
 MESH_SIZE = None; # Process mesh, for example use [16,16] for 256 cores with Nx,Ny,Nz =256,256,64
 
-T_opt = 6.;
+T_opt = 2.;
 N_ITERS = int(T_opt*(Rm/dt));
 N_SUB_ITERS = N_ITERS//50;
 
