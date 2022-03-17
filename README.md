@@ -1,5 +1,5 @@
 # PlaneCouetteFlowMHD
-DNS script, initial condition and instructions required to simulate and reproduce the quasi-Keplarian plane Couette flow dynamo (P. M. Mannix, Y. Ponty, F. Marcotte 2021/2). The script is written for execution with the [Dedalus code (Burns et al. 2020)](https://doi.org/10.1103/PhysRevResearch.2.023068), for installation details see [Dedalus](https://dedalus-project.org)
+DNS script, initial condition and instructions required to simulate and reproduce the quasi-Keplerian plane Couette flow dynamo (P. M. Mannix, Y. Ponty, F. Marcotte 2021/2). The script is written for execution with the [Dedalus code (Burns et al. 2020)](https://doi.org/10.1103/PhysRevResearch.2.023068), for installation details see [Dedalus](https://dedalus-project.org)
 
 Having installed Dedalus and activated its conda environment, unzip the initial condition and execute the script by running
 
