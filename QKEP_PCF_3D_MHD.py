@@ -1,14 +1,13 @@
 """
 Dedalus script for 3D Quasi-Keplarian MHD Plane Couette flow dynamo (P. M. Mannix, Y. Ponty, F. Marcotte 2021/2)
 
-(Yet to be fully commented....)
-
 This script uses a Fourier basis in the (stream-wise) x and (span-wise) y directions,
 and Chebshev basis in the (shear-wise) z direction. No-slip velocity U = \pm 1 is
 enforced by decomposing \vec{U}(x,y,z,t) = V(z)\vec{x} + \vec{u}(x,y,z,t).
 Perfectly conducting magnetic boundary conditions B_z = dz(B_x) = dz(B_y) = 0, are
 enforced alongside the div(B) = 0 condition using a Lagrange mutiplier \Pi. For
-details of this approach see (A. Guseva et al. 2015 New J. Phys. 17)
+details of this approach see (A. Guseva et al. 2015 New J. Phys. 17). The zero net flux
+condition (1/V)int \vec{B} dV = 0 is enforced in a manner similar to that of pipe flow.
 
 The equations are scaled using the: 
 half channel width L = d L^*
@@ -26,8 +25,8 @@ To run, and plot using 4 processes, for instance, you could use:
     $ mpiexec -n 4 python3 QKEP_PCF_3D_MHD.py
     $ mpiexec -n 4 python3 Plot_Paper_figures.py
 
-The simulation should take roughly ?????? cpu-hrs to run, but will
-automatically stop after an hour, to change this setting .......?
+The simulation should take roughly 90 cpu-hrs/Ohmic time to run for the specified parameters,
+this result is based on using a AMD Epyc 7302 (2x16 cores) node.
 
 """
 import sys,os,mpi4py,time
