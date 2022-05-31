@@ -9,11 +9,17 @@ where procs is to be replaced with the desired/availabe number. The time-series 
 
 `python3 Plot_Paper_figures.py && mkdir Plotted_Data && mv *.pdf Plotted_Data`
 
-Figure 1. time-series can be reproduced by specifying, *a minimum resolution* of 
+Figure 1. time-series can be reproduced by adding
+
+'Plot_TimeSeries_KeMe('scalar_data_s1.h5')' 
+
+in the main of Plot_Paper_figures.py
+
+Figure 1. time-series can also be reproduced by specifying, *a minimum resolution* of 
 
 `Nx=64,Ny=128,Ny=64, dt=0.0125, N_ITERS = 6*((Pm*Re)/dt)`
 
-along with the parameters specified therin, and running the script and plotting the data as above. 
+along with the parameters add minimal seed (currently not provided) specified therin, and running the script and plotting the data as above. 
 
 Typically this execution demands a compute cluster or large workstation. Referencence using 32 cores, with a Modified Crank-Nicolson Adams-basforth integration is
 
