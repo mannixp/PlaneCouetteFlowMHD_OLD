@@ -171,7 +171,7 @@ IVP_FWD = PCF.build_solver(de.timesteppers.MCNAB2);
 logger.info('Solver built')
 
 # Initial condition t=0 is index=0, index=1 is t=T_opt = Rm/8 
-IVP_FWD.load_state("/workspace/pmannix/DAL_PCF_KEP_MHD_PC/InitCond_Re20Pm75_T0.125Rm_M5e-05_FauxBruitGerme.h5",index=0); # Change this to your workdir/initial condition
+IVP_FWD.load_state("InitCond_Re20Pm75_T0.125Rm_M5e-05_FauxBruitGerme.h5",index=0); # initial condition
 IVP_FWD.sim_tim = IVP_FWD.initial_sim_time = 0.
 IVP_FWD.iteration = IVP_FWD.initial_iteration = 0    
 
