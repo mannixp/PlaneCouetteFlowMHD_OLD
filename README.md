@@ -11,7 +11,7 @@ where procs is to be replaced with the desired/availabe number. The time-series 
 
 Figure 1. time-series can be reproduced by adding
 
-'Plot_TimeSeries_KeMe('scalar_data_s1.h5')' 
+`Plot_TimeSeries_KeMe('scalar_data_s1.h5')' 
 
 in the main of Plot_Paper_figures.py
 
