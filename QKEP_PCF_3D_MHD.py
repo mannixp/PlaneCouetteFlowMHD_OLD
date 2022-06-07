@@ -1,5 +1,5 @@
 """
-Dedalus script for 3D Quasi-Keplarian MHD Plane Couette flow dynamo (P. M. Mannix, Y. Ponty, F. Marcotte 2021/2)
+Dedalus script for 3D Quasi-Keplerian MHD Plane Couette flow dynamo (P. M. Mannix, Y. Ponty, F. Marcotte 2021/2)
 
 This script uses a Fourier basis in the (stream-wise) x and (span-wise) y directions,
 and Chebshev basis in the (shear-wise) z direction. No-slip velocity U = \pm 1 is
